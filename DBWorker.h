@@ -14,7 +14,6 @@ public:
     void start();
     void stop();
 
-    // 새 DB 작업 추가
     void enqueueTask(const DBTask& task);
 
 private:

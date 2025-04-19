@@ -30,7 +30,6 @@ bool DBManager::createAccount(const std::string& username, const std::string& pa
 {
     try
     {
-        // 예제: 비밀번호는 실제 구현 시 적절한 해싱 과정을 거쳐야 함
         std::unique_ptr<sql::PreparedStatement> pstmt(
             m_Connection->prepareStatement("INSERT INTO accounts (username, password, ip) VALUES (?, ?)"));
         pstmt->setString(1, username);
@@ -53,18 +52,13 @@ bool DBManager::login(const std::string& username, const std::string& password)
             m_Connection->prepareStatement("SELECT password FROM accounts WHERE username = ?"));
         pstmt->setString(1, username);
         std::unique_ptr<sql::ResultSet> res(pstmt->executeQuery());
-        if (!res->next()) {
-            // 계정이 존재하지 않음
+        if (!res->next())
             return false;
-        }
+
         std::string storedHash = res->getString("password");
 
-        // 입력받은 password와 storedHash를 비교합니다.
-        // 실제 구현 시, 해시 비교 함수를 호출해야 함 (예: bcrypt, Argon2 등)
         if (storedHash == password)
-        {  // 단순 비교; 실제 구현에서는 해시 비교 필요
             return true;
-        }
     }
     catch (sql::SQLException& e)
     {

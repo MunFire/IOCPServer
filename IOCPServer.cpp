@@ -41,7 +41,6 @@ void WorkerThread()
 
 int main()
 {
-    // Initialize Winsock
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
     {
@@ -49,7 +48,6 @@ int main()
         return 1;
     }
 
-    // Create completion port
     g_completionPort = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0);
     if (g_completionPort == NULL)
     {
@@ -58,12 +56,10 @@ int main()
         return 1;
     }
 
-    // Create worker threads
     std::vector<std::thread> threads;
     for (int i = 0; i < std::thread::hardware_concurrency(); ++i)
         threads.emplace_back(WorkerThread);
 
-    // Create listening socket
     SOCKET listenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (listenSocket == INVALID_SOCKET)
     {
@@ -72,7 +68,6 @@ int main()
         return 1;
     }
 
-    // Bind and listen
     struct sockaddr_in serverAddr;
     memset(&serverAddr, 0, sizeof(serverAddr));
     serverAddr.sin_family = AF_INET;
@@ -97,7 +92,6 @@ int main()
     g_dbWorker.start();
     std::cout << "Server Running......" << std::endl;
 
-    // Accept incoming connections
     while (true)
     {
         SOCKET clientSocket = accept(listenSocket, NULL, NULL);
@@ -123,7 +117,6 @@ int main()
         else
             client->m_socket = clientSocket;
 
-        // Associate client socket with completion port
         if (!CreateIoCompletionPort((HANDLE)client->m_socket, g_completionPort, (ULONG_PTR)client, 0))
         {
             std::cerr << "CreateIoCompletionPort failed with error " << GetLastError() << std::endl;
@@ -131,16 +124,13 @@ int main()
             continue;
         }
  
-        // Start processing client
         client->Start();
         
     }
 
-    // Cleanup
     closesocket(listenSocket);
     WSACleanup();
 
-    // Wait for worker threads to finish
     for (auto& thread : threads)
     {
         thread.join();

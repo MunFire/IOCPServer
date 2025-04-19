@@ -89,17 +89,14 @@ std::optional<std::string> RedisManager::getUserData(const std::string& userId)
     return std::nullopt;
 }
 
-// username_failed 키를 사용하여 로그인 실패 횟수를 관리
 int RedisManager::incrementFailedLogin(const std::string& username, int ttlSeconds)
 {
     try
     {
         std::string key = username + ":failed";
         auto count = m_Redis.incr(key);
-        // 첫 번째 실패 시 TTL 설정
-        if (count == 1) {
+        if (count == 1)
             m_Redis.expire(key, ttlSeconds);
-        }
         return static_cast<int>(count);
     }
     catch (const Error& e)

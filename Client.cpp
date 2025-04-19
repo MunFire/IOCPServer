@@ -163,15 +163,13 @@ std::string CClient::generateToken()
 
 void CClient::HandleLogin(const std::string& username, const std::string& password)
 {
-    // 우선 Rate Limiting 검사
-    int fails = g_redis.incrementFailedLogin(username, 600); // 10분 TTL
+    int fails = g_redis.incrementFailedLogin(username, 600);
     if (fails > 5)
     {
         SendAuthResponse(Net::AuthType::AuthType_LOGIN, Net::ResultCode::ResultCode_TOO_MANY_ATTEMPTS, "Too many failed attempts");
         return;
     }
 
-    // DBWorker는 글로벌로 관리 (g_dbWorker)
     DBTask task;
     task.m_Type = DBRequestType::LOGIN;
     task.m_strUsername = username;
@@ -190,11 +188,9 @@ void CClient::HandleLogin(const std::string& username, const std::string& passwo
         std::string token = generateToken();
         g_redis.createSession(token, username, 3600);      // 1시간 TTL
 
-        // 클라이언트에 세션 토큰 전달
         SendAuthResponse(Net::AuthType::AuthType_LOGIN, Net::ResultCode::ResultCode_SUCCESS, token);
         };
 
-    // 비동기 DB 요청
     g_dbWorker.enqueueTask(task);
 }
 
@@ -202,20 +198,16 @@ void CClient::HandleProfileRequest(const Net::ProfileRequest* req)
 {
     std::string username = req->username()->str();
 
-    // 1) Redis 캐시 우선 조회
     auto cached = g_redis.getUserData(username);
     if (cached)
     {
-        // 캐시 히트 시 바로 응답
         SendProfileResponse(*cached);
         return;
     }
 
-    // 2) 캐시 미스 → MySQL에서 동기 조회
     DBManager dbMgr("tcp://127.0.0.1:3301", "db_test", "db_test", "my_test");
     if (!dbMgr.connect())
     {
-        // DB 연결 실패 응답
         SendProfileResponse("{}");
         return;
     }
