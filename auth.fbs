@@ -1,0 +1,66 @@
+namespace Net;
+
+enum AuthType : byte
+{
+  NONE = 0,
+  CREATE = 1,
+  LOGIN = 2,
+  LOGOUT = 3,
+  PROFILEREQ = 4,
+  PROFILERES = 5
+}
+
+enum ResultCode : byte 
+{
+  SUCCESS = 0,
+  FAIL = 1,
+  DUPLICATE = 2,     // 계정 중복
+  NOT_FOUND = 3,     // 로그인 대상 없음
+  WRONG_PASSWORD = 4,
+  TOO_MANY_ATTEMPTS = 5
+}
+
+table CreateAccount 
+{
+  username: string;
+  password: string;
+}
+
+table LoginRequest 
+{
+  username: string;
+  password: string;
+}
+
+table LogoutRequest 
+{
+  username: string;
+}
+
+table ProfileRequest 
+{
+  username:string;
+}
+
+table ProfileResponse 
+{
+  json_data:string;  // JSON으로 직렬화된 프로필
+}
+
+table AuthPacket 
+{
+  type: AuthType;
+  create: CreateAccount;
+  login: LoginRequest;
+  logout: LogoutRequest;
+  profilereq:ProfileRequest;
+  profileres:ProfileResponse;
+}
+
+table AuthResponse {
+  type: AuthType;
+  result: ResultCode;
+  message: string;
+}
+
+root_type AuthPacket;
